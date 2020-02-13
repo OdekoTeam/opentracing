@@ -10,6 +10,7 @@ synopsis: OpenTracing integration for Servant servers + clients
 
 library:
   exposed-modules: OpenTracing.Servant
+  other-modules: OpenTracing.Servant.ParsePath
 
   dependencies:
     - base
