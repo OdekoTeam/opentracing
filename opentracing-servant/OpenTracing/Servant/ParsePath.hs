@@ -26,11 +26,7 @@ import Data.Vault.Lazy (Vault)
 
 
 pathDescription :: ParsePath api => Proxy api -> [Text] -> Maybe Text
-pathDescription p xs = do
-  desc <- parsePathDescription p xs
-  case desc of
-    "" -> return "/"
-    _ -> return desc
+pathDescription p xs = ("/" <>) <$> parsePathDescription p xs
 
 class ParsePath api where
   parsePathDescription :: Proxy api -> [Text] -> Maybe Text
@@ -42,13 +38,13 @@ instance ParsePath (Verb method status ctypes a) where
 instance (KnownSymbol path, ParsePath api) => ParsePath (path :> api)  where
   parsePathDescription _ (x:xs)
     | x == T.pack (symbolVal $ Proxy @path) = parsePathDescription (Proxy @api) xs
-        & fmap (\rest -> "/" <> T.pack (symbolVal $ Proxy @path) <> rest)
+        & fmap (\rest -> T.pack (symbolVal $ Proxy @path) <> "/" <> rest )
   parsePathDescription _ _ = Nothing
 
 instance (ParsePath api, KnownSymbol capture, FromHttpApiData a) => ParsePath (Capture capture a :> api) where
   parsePathDescription _ (x:xs)
     | Right _ <- parseUrlPiece @a x = parsePathDescription (Proxy @api) xs
-        & fmap (\rest -> "/:" <> T.pack (symbolVal $ Proxy @capture) <> rest)
+        & fmap (\rest -> ":" <> T.pack (symbolVal $ Proxy @capture) <> "/" <> rest)
   parsePathDescription _ _ = Nothing
 
 instance (ParsePath api) => ParsePath (Vault :> api) where
